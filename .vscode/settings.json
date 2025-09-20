@@ -3,5 +3,22 @@
         "activityBar.background": "#4A230F",
         "titleBar.activeBackground": "#673016",
         "titleBar.activeForeground": "#FEFBF9"
-    }
+    },
+    // Python configuration with Ruff formatting
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+            "source.fixAll.ruff": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    // Ruff configuration (works alongside Pyre)
+    "ruff.enable": true,
+    "ruff.organizeImports": true,
+    // Keep Pyre for type checking (your existing setup)
+    // Auto-save and editor settings
+    "files.autoSave": "onFocusChange",
+    "editor.renderWhitespace": "boundary"
 }
