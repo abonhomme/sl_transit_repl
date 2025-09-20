@@ -1,0 +1,12 @@
+[project]
+name = "sl-transit-repl"
+version = "0.1.0"
+description = "A REPL for querying real time departure data for Stockholm's public transit system (SL) via Trafiklab APIs."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "prompt-toolkit>=3.0.52",
+    "requests>=2.32.5",
+    "rich>=14.1.0",
+    "unidecode>=1.4.0",
+]
