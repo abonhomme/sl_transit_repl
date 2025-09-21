@@ -171,7 +171,10 @@ class SLTransitREPL:
                             # Store metadata for potential future use
                             self._cache_metadata = cache_data["metadata"]
                             need_fetch = self._is_cache_stale()
-                        need_fetch = False
+                        else:
+                            # No fetch date, treat as stale
+                            need_fetch = True
+                        # Don't set need_fetch = False here if we have metadata
         except (json.JSONDecodeError, OSError) as e:
             self.console.print(
                 f"[yellow]Warning: Could not read sites cache: {e}[/yellow]"
@@ -364,7 +367,12 @@ class SLTransitREPL:
                 colored_status = status
 
             # Time colors - check if within warning threshold or delayed
-            now = datetime.now()
+            # Use timezone-aware datetime if the parsed times have timezone info
+            if scheduled_time.tzinfo is not None:
+                now = datetime.now(scheduled_time.tzinfo)
+            else:
+                now = datetime.now()
+
             scheduled_diff = (scheduled_time - now).total_seconds() / 60
             expected_diff = (expected_time - now).total_seconds() / 60
             time_delay = abs((expected_time - scheduled_time).total_seconds() / 60)

@@ -1,0 +1,19 @@
+{
+  "departures": [
+    {
+      "line": {
+        "id": 17,
+        "designation": "17",
+        "transport_mode": "METRO"
+      },
+      "direction": "Åkeshov",
+      "direction_code": 1,
+      "scheduled": "2024-09-21T14:30:00+02:00",
+      "expected": "2024-09-21T14:32:00+02:00",
+      "state": "EXPECTED",
+      "stop_point": {
+        "designation": "2"
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "fetch_date": "2024-09-21T12:00:00+02:00",
+    "version": "1.0"
+  },
+  "sites": {
+    "1002": {
+      "id": 1002,
+      "name": "Odenplan",
+      "alias": ["Odenplan T-bana"],
+      "abbreviation": "ODE",
+      "lat": 59.342874,
+      "lon": 18.049292
+    },
+    "9001": {
+      "id": 9001,
+      "name": "Centralen",
+      "alias": ["Stockholm Central", "T-Centralen"],
+      "abbreviation": "CEN",
+      "lat": 59.331134,
+      "lon": 18.058120
+    }
+  }
+}
