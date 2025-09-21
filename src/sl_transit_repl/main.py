@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import os
 import re
 import sys
 import time
@@ -104,29 +103,28 @@ class SLTransitREPL:
     TIME_WARNING_THRESHOLD = 15  # <15min gets green color
     TIME_DELAY_THRESHOLD = 5  # >5min difference gets red color
 
-    def __init__(self, cache_dir: str | None = None, history_file: str | None = None):
+    def __init__(self, app_dir: str | Path | None = None):
         """Initialize the SL Transit REPL.
 
         Args:
-            cache_dir: Optional path to cache directory. If None, uses 'cache' in script directory.
-            history_file: Optional path to history file. If None, uses default in home directory.
+            app_dir: Optional path to application directory. If None, uses '~/.sl_transit_repl'.
+
+        The application directory will contain the following files:
+        - cache/sites.json: Cached sites data
+        - .repl_history: History file for the REPL
         """
-        # Set up directories and files
-        script_dir = Path(__file__).parent.resolve()
-
-        if cache_dir:
-            self.cache_dir = Path(cache_dir)
+        # Set up app directory
+        if app_dir:
+            self.app_dir = Path(app_dir).expanduser()
         else:
-            self.cache_dir = script_dir / "cache"
+            self.app_dir = Path.home() / ".sl_transit_repl"
 
+        self.app_dir.mkdir(exist_ok=True)
+
+        # Set up paths within app directory
+        self.cache_dir = self.app_dir / "cache"
         self.sites_json = self.cache_dir / "sites.json"
-
-        if history_file:
-            self.history_file = history_file
-        else:
-            self.history_file = os.path.join(
-                str(Path.home()), ".sl_transit_repl_history"
-            )
+        self.history_file = str(self.app_dir / ".repl_history")
 
         # Ensure cache directory exists
         self.cache_dir.mkdir(exist_ok=True)
@@ -159,8 +157,21 @@ class SLTransitREPL:
         try:
             if self.sites_json.exists():
                 with self.sites_json.open("r") as f:
-                    sites = json.load(f)
-                    need_fetch = False
+                    cache_data = json.load(f)
+
+                    # Handle new format with metadata
+                    if (
+                        isinstance(cache_data, dict)
+                        and "metadata" in cache_data
+                        and "sites" in cache_data
+                    ):
+                        sites = cache_data["sites"]
+                        fetch_date_str = cache_data["metadata"].get("fetch_date")
+                        if fetch_date_str:
+                            # Store metadata for potential future use
+                            self._cache_metadata = cache_data["metadata"]
+                            need_fetch = self._is_cache_stale()
+                        need_fetch = False
         except (json.JSONDecodeError, OSError) as e:
             self.console.print(
                 f"[yellow]Warning: Could not read sites cache: {e}[/yellow]"
@@ -173,14 +184,46 @@ class SLTransitREPL:
         return sites
 
     def _save_sites(self, sites: dict[str, dict[str, Any]]) -> None:
-        """Save sites dictionary to JSON file."""
+        """Save sites dictionary to JSON file with metadata including fetch timestamp."""
         try:
+            cache_data = {
+                "metadata": {
+                    "fetch_date": datetime.now().isoformat(),
+                    "version": "1.0",
+                },
+                "sites": sites,
+            }
             with self.sites_json.open("w", encoding="utf-8") as f:
-                json.dump(sites, f, indent=2, ensure_ascii=False)
+                json.dump(cache_data, f, indent=2, ensure_ascii=False)
         except OSError as e:
             self.console.print(
                 f"[yellow]Warning: Could not save sites cache: {e}[/yellow]"
             )
+
+    def _is_cache_stale(self, max_age_hours: int = 24) -> bool:
+        """Check if the cached data is stale based on fetch date.
+
+        Args:
+            max_age_hours: Maximum age of cache in hours before considering it stale
+
+        Returns:
+            True if cache is stale or no metadata available, False otherwise
+        """
+        if not hasattr(self, "_cache_metadata") or not self._cache_metadata:
+            return True
+
+        fetch_date_str = self._cache_metadata.get("fetch_date")
+        if not fetch_date_str:
+            return True
+
+        try:
+            fetch_date = datetime.fromisoformat(fetch_date_str)
+            age = (
+                datetime.now() - fetch_date
+            ).total_seconds() / 3600  # Convert to hours
+            return age > max_age_hours
+        except (ValueError, TypeError):
+            return True
 
     def _get_site_info(self, site_id: str) -> dict[str, Any] | None:
         """Get site information and validate it exists."""

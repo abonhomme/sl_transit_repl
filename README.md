@@ -22,7 +22,7 @@ pip install requests prompt-toolkit rich unidecode pyyaml
 ```
 
 ### Setup
-The tool automatically creates a cache directory and downloads site data on first use.
+The tool automatically creates an application directory (`~/.sl_transit_repl`) and downloads site data on first use.
 
 ## Usage
 
@@ -95,10 +95,13 @@ Uses official data from SL via the [sites and depatures APIs](https://www.trafik
 The tool is built around the `SLTransitREPL` class _could_ be imported for use in other scripts. Not exactly the intended usage, but knock yourself out.
 
 ```python
-from departures import SLTransitREPL
+from sl_transit_repl import SLTransitREPL
 
-# Create REPL instance with custom cache directory
-repl = SLTransitREPL(cache_dir="/path/to/cache")
+# Create REPL instance with default app directory
+repl = SLTransitREPL()
+
+# Or create REPL instance with custom app directory
+repl = SLTransitREPL(app_dir="~/custom_transit_data")
 
 # Run interactive session
 repl.run()
@@ -108,8 +111,26 @@ site = repl._find_site_by_id(1002)
 sites = repl._find_sites_by_substring("central")
 ```
 
-## Files
+## Files & Directory Structure
 
-- **Cache**: `cache/sites.json` (site data)
-- **History**: `~/.sl_transit_repl_history` (command history)
-- **Config**: Line colors and thresholds defined in class constants
+The application creates a hidden directory in your home folder:
+
+```
+~/.sl_transit_repl/           # Main application directory
+├── cache/                    # Cached API data
+│   └── sites.json           # Site data with fetch timestamps
+└── .repl_history            # Command history for auto-completion
+```
+
+### File Descriptions
+
+- **`~/.sl_transit_repl/cache/sites.json`**: Cached site data from SL API with metadata including:
+  - Site information (names, IDs, coordinates, aliases)
+  - Fetch timestamp for cache validation
+  - Version information for future compatibility
+
+- **`~/.sl_transit_repl/.repl_history`**: Command history for the interactive REPL session
+  - Enables ↑/↓ arrow key navigation through previous commands
+  - Persists between sessions
+
+- **Configuration**: Line colors, transport modes, and time thresholds are defined as class constants in the source code
