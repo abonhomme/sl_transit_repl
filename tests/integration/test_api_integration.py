@@ -24,10 +24,11 @@ class TestAPIIntegration:
         mock_get.return_value = mock_response
 
         repl = SLTransitREPL(app_dir=temp_app_dir)
-        sites = repl._fetch_sites()
+        # _fetch_sites is already called during initialization, so sites are loaded
+        sites = repl.sites
 
-        # Verify API was called correctly
-        mock_get.assert_called_once_with(f"{SLTransitREPL.BASE_URL}/sites")
+        # Verify API was called during initialization
+        mock_get.assert_called_with(f"{SLTransitREPL.BASE_URL}/sites")
 
         # Verify response transformation
         assert "1002" in sites
