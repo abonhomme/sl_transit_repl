@@ -1,6 +1,6 @@
 # SL Transit REPL
 
-An interactive command-line tool (with auto-completion and command history) for querying real time departure data from Stockholm's public transit system (SL) using Trafiklab APIs.
+An interactive command-line tool (with auto-completion and command history) for querying real time departure data from Stockholm's public transit system (SL) using [Trafiklab](https://www.trafiklab.se/) APIs.
 
 This is **not** intended as library/wrapper for programmatically accessing the Trafiklab APIs.
 

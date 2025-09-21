@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 cache/sites.json
+/src/sl_transit_repl/cache
