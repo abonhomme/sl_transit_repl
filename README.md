@@ -2,7 +2,7 @@
 
 A command-line tool for querying real time departure data from Stockholm's public transit system (SL) using [Trafiklab](https://www.trafiklab.se/) APIs.
 
-I made this primarily as a compliment to an [xbar](https://xbarapp.com/) plugin I made to keep the next bus time for my closest stops in my menu bar.
+I made this primarily as a compliment to an [xbar](https://xbarapp.com/) plugin I made to keep the next bus time for my closest stops in my menu bar. Link to plugin coming soon.
 ![SL Transit REPL](./docs/images/demo-frejgatan.png)
 
 **Two modes of operation:**
@@ -41,7 +41,8 @@ The tool automatically creates an application directory (`~/.sl_transit_repl`) a
 
 ## Usage
 
-### Command Line Mode (Single Queries)
+### Command Line Mode & REPL
+To access the REPL run the command with no arguments; otherwise, pass a single argument (in quotes if necessary) and it will output the result and exit.
 
 **After installation:**
 ```bash
@@ -70,19 +71,7 @@ python -m src.sl_transit_repl "1002"
 python -m src.sl_transit_repl "lookup:name central"
 ```
 
-### Interactive REPL Mode
-
-**After installation:**
-```bash
-sl-repl
-```
-
-**From source (development):**
-```bash
-python -m src.sl_transit_repl
-```
-
-### Interactive Commands
+### Commands
 
 #### Departure Queries
 ```bash
@@ -106,26 +95,15 @@ python -m src.sl_transit_repl
 
 # Debug mode (show HTTP headers)
 1002 debug:true
-```
 
-#### Site Lookup
-```bash
+
 # Find site by ID
 lookup:id 1002
 
 # Find sites by name (fuzzy search)
 lookup:name odenplan
 lookup:name central
-lookup:name åkeshov    # Works with Swedish characters
-```
-
-#### Other Commands
-```bash
-# Show detailed help
-help
-
-# Exit the program
-quit
+lookup:name åkeshov
 ```
 
 ### Example Sessions
@@ -226,7 +204,7 @@ The application creates a hidden directory in your home folder:
 
 - **`~/.sl_transit_repl/cache/sites.json`**: Cached site data from SL API with metadata including:
   - Site information (names, IDs, coordinates, aliases)
-  - Fetch timestamp for cache validation
+  - Fetch timestamp for cache validation (24-hour expiry)
   - Version information for future compatibility
 
 - **`~/.sl_transit_repl/.repl_history`**: Command history for the interactive REPL session
