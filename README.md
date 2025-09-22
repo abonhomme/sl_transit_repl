@@ -1,6 +1,10 @@
 # SL Transit REPL
 
-An interactive command-line tool (with auto-completion and command history) for querying real time departure data from Stockholm's public transit system (SL) using [Trafiklab](https://www.trafiklab.se/) APIs.
+A command-line tool for querying real time departure data from Stockholm's public transit system (SL) using [Trafiklab](https://www.trafiklab.se/) APIs.
+
+**Two modes of operation:**
+- **Interactive REPL** with auto-completion and command history
+- **Single-query mode** for scripting and automation
 
 This is **not** intended as library/wrapper for programmatically accessing the Trafiklab APIs.
 
@@ -16,9 +20,17 @@ This is **not** intended as library/wrapper for programmatically accessing the T
 
 ## Installation
 
-### Requirements
+### Install from PyPI
 ```bash
-pip install requests prompt-toolkit rich unidecode pyyaml
+pip install sl-transit-repl
+```
+After installation, you can use the `sl-repl` command from anywhere (assuming the environment where sl-transit-repl is installed is active).
+
+### Install from Source
+```bash
+git clone https://github.com/abonhomme/sl-transit-repl.git
+cd sl-transit-repl
+pip install -e .
 ```
 
 ### Setup
@@ -26,12 +38,48 @@ The tool automatically creates an application directory (`~/.sl_transit_repl`) a
 
 ## Usage
 
-### Starting the REPL
+### Command Line Mode (Single Queries)
+
+**After installation:**
 ```bash
-python departures.py
+# Get help
+sl-repl --help
+
+# Basic departure lookup
+sl-repl "1002"
+
+# Departure lookup with filters
+sl-repl "1002 line:17 direction:1"
+
+# Site lookup by name
+sl-repl "lookup:name central"
+
+# Site lookup by ID
+sl-repl "lookup:id 1002"
+
+# Custom app directory
+sl-repl --app-dir ~/my_transit_data "1002"
 ```
 
-### Basic Commands
+**From source (development):**
+```bash
+python -m src.sl_transit_repl "1002"
+python -m src.sl_transit_repl "lookup:name central"
+```
+
+### Interactive REPL Mode
+
+**After installation:**
+```bash
+sl-repl
+```
+
+**From source (development):**
+```bash
+python -m src.sl_transit_repl
+```
+
+### Interactive Commands
 
 #### Departure Queries
 ```bash
@@ -77,8 +125,53 @@ help
 quit
 ```
 
-### Example Session
-TBD - Add screenshots
+### Example Sessions
+
+#### Command Line Mode
+```bash
+# Quick departure check
+$ sl-repl "1002 forecast:5"
+
+Site: Centralen (1002)
+┌──────┬───────────┬──────────────┬───────────┬──────────┬──────────┬──────────┐
+│ Line │ Transport │ Direction    │ Scheduled │ Expected │ Status   │ Platform │
+├──────┼───────────┼──────────────┼───────────┼──────────┼──────────┼──────────┤
+│ 19   │ METRO     │ Hässelby str │ 21:28     │ 21:28    │ ATSTOP   │ 1        │
+│ 14   │ METRO     │ Fruängen     │ 21:29     │ 21:29    │ EXPECTED │ 2        │
+└──────┴───────────┴──────────────┴───────────┴──────────┴──────────┴──────────┘
+
+# Site search
+$ sl-repl "lookup:name odenplan"
+
+Sites matching 'odenplan'
+┌──────┬───────────┬─────────┬──────────────┬──────────────────┐
+│   ID │ Name      │ Aliases │ Abbreviation │ Coordinates      │
+├──────┼───────────┼─────────┼──────────────┼──────────────────┤
+│ 9302 │ Odenplan  │         │ ODE          │ 59.3428, 18.0496 │
+└──────┴───────────┴─────────┴──────────────┴──────────────────┘
+```
+
+#### Interactive REPL Mode
+```
+$ sl-repl
+
+SL Transport REPL
+Examples:
+  1002                      (departure query: just site ID)
+  1002 line:17 direction:1  (departure query: with line and direction)
+  lookup:id 1002            (site lookup: find site by ID)
+  lookup:name odenplan      (site lookup: find sites by name)
+
+Enter 'quit' to exit
+Use ↑/↓ arrows to access command history
+
+Enter query: 1002 line:17
+[Results displayed...]
+
+Enter query: quit
+```
+
+TODO: ADD SCREENSHOTS
 
 ## Configuration
 ### Time Thresholds
@@ -105,6 +198,10 @@ repl = SLTransitREPL(app_dir="~/custom_transit_data")
 
 # Run interactive session
 repl.run()
+
+# Execute single queries programmatically
+success = repl.execute_query("1002 line:17")
+success = repl.execute_query("lookup:name central")
 
 # Or use individual methods programmatically
 site = repl._find_site_by_id(1002)

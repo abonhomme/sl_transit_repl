@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import json
 import re
 import sys
@@ -654,6 +655,99 @@ class SLTransitREPL:
             self.console.print("\n[yellow]Program interrupted by user[/yellow]")
             raise
 
+    def execute_query(self, query: str) -> bool:
+        """Execute a single query and return whether it was successful.
+
+        Args:
+            query: The query string to execute
+
+        Returns:
+            True if query was executed successfully, False otherwise
+        """
+        # Parse and validate query
+        valid, result = self._parse_query(query)
+        if not valid:
+            if result["error"]:
+                self.console.print(f"[red]{result['error']}[/red]")
+            return False
+
+        # Handle special commands
+        command = result.get("command")
+
+        if command == "help":
+            self._show_help()
+            return True
+
+        elif command == "lookup":
+            lookup_type = result["lookup_type"]
+            search_term = result["search_term"]
+
+            if lookup_type == "id":
+                try:
+                    site_id = int(search_term)
+                    site = self._find_site_by_id(site_id)
+                    if site:
+                        table = self._create_site_table(site, f"Site with ID {site_id}")
+                        self.console.print(table)
+                    else:
+                        self.console.print(
+                            f"[red]No site found with ID {site_id}[/red]"
+                        )
+                        return False
+                except ValueError:
+                    self.console.print(
+                        "[red]Invalid ID format. Please enter a number.[/red]"
+                    )
+                    return False
+
+            elif lookup_type == "name":
+                sites = self._find_sites_by_substring(search_term)
+                if sites:
+                    table = self._create_site_table(
+                        sites, f"Sites matching '{search_term}'"
+                    )
+                    self.console.print(table)
+                else:
+                    self.console.print(
+                        f"[red]No sites found containing '{search_term}'[/red]"
+                    )
+                    return False
+
+            return True
+
+        # Build API parameters for departure queries
+        api_params = {"forecast": result.get("forecast", self.DEFAULT_FORECAST)}
+
+        if "transport" in result:
+            api_params["transport"] = result["transport"]
+        if "direction" in result:
+            api_params["direction"] = result["direction"]
+        if "line" in result:
+            api_params["line"] = result["line"]
+
+        # Get show_numbers preference
+        show_direction_numbers = result.get("show_numbers", "").lower() == "true"
+
+        # Get debug preference
+        debug = result.get("debug", "").lower() == "true"
+
+        for key, value in result.items():
+            if key.startswith("_"):
+                api_params[key] = value
+
+        site_id = str(result["site"])
+
+        # Get site info from our dictionary
+        site_info = self._get_site_info(site_id)
+        if not site_info:
+            return False
+
+        # Fetch and display departures
+        self._get_departures(
+            int(site_id), api_params, show_direction_numbers, debug, site_info
+        )
+        return True
+
     def _run_loop(self) -> None:
         completer = self._create_completer()
         history = FileHistory(self.history_file)
@@ -675,97 +769,48 @@ class SLTransitREPL:
             if query.lower() == "quit":
                 break
 
-            # Parse and validate query
-            valid, result = self._parse_query(query)
-            if not valid:
-                if result["error"]:
-                    self.console.print(f"[red]{result['error']}[/red]")
-                continue
-
-            # Handle special commands
-            command = result.get("command")
-
-            if command == "help":
-                self._show_help()
-                self.console.print("\n---\n")
-                continue
-
-            elif command == "lookup":
-                lookup_type = result["lookup_type"]
-                search_term = result["search_term"]
-
-                if lookup_type == "id":
-                    try:
-                        site_id = int(search_term)
-                        site = self._find_site_by_id(site_id)
-                        if site:
-                            table = self._create_site_table(
-                                site, f"Site with ID {site_id}"
-                            )
-                            self.console.print(table)
-                        else:
-                            self.console.print(
-                                f"[red]No site found with ID {site_id}[/red]"
-                            )
-                    except ValueError:
-                        self.console.print(
-                            "[red]Invalid ID format. Please enter a number.[/red]"
-                        )
-
-                elif lookup_type == "name":
-                    sites = self._find_sites_by_substring(search_term)
-                    if sites:
-                        table = self._create_site_table(
-                            sites, f"Sites matching '{search_term}'"
-                        )
-                        self.console.print(table)
-                    else:
-                        self.console.print(
-                            f"[red]No sites found containing '{search_term}'[/red]"
-                        )
-
-                self.console.print("\n---\n")
-                continue
-
-            # Build API parameters for departure queries
-            api_params = {"forecast": result.get("forecast", self.DEFAULT_FORECAST)}
-
-            if "transport" in result:
-                api_params["transport"] = result["transport"]
-            if "direction" in result:
-                api_params["direction"] = result["direction"]
-            if "line" in result:
-                api_params["line"] = result["line"]
-
-            # Get show_numbers preference
-            show_direction_numbers = result.get("show_numbers", "").lower() == "true"
-
-            # Get debug preference
-            debug = result.get("debug", "").lower() == "true"
-
-            for key, value in result.items():
-                if key.startswith("_"):
-                    api_params[key] = value
-
-            site_id = str(result["site"])
-
-            # Get site info from our dictionary
-            site_info = self._get_site_info(site_id)
-            if not site_info:
-                continue
-
-            # Fetch and display departures
-            self._get_departures(
-                int(site_id), api_params, show_direction_numbers, debug, site_info
-            )
-            self.console.print("\n---\n")
+            # Execute the query using the new method
+            self.execute_query(query)
 
 
 def main():
     """Main entry point for the sl-repl CLI command."""
+    parser = argparse.ArgumentParser(
+        description="SL Transit REPL - Query Stockholm's public transit departures",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                           # Start interactive REPL
+  %(prog)s "1002"                    # Get departures for site 1002
+  %(prog)s "1002 line:17"            # Get departures for line 17 at site 1002
+  %(prog)s "lookup:name central"     # Find sites containing 'central'
+  %(prog)s "lookup:id 1002"          # Get info for site ID 1002
+        """.strip(),
+    )
+
+    parser.add_argument(
+        "query",
+        nargs="?",
+        help="Query to execute (if not provided, starts interactive REPL)",
+    )
+
+    parser.add_argument(
+        "--app-dir",
+        help="Custom application directory path (default: ~/.sl_transit_repl)",
+    )
+
+    args = parser.parse_args()
+
     try:
-        repl = SLTransitREPL()
-        repl.run()
+        repl = SLTransitREPL(app_dir=args.app_dir)
+
+        if args.query:
+            # Non-interactive mode: execute single query
+            success = repl.execute_query(args.query)
+            sys.exit(0 if success else 1)
+        else:
+            # Interactive mode: start REPL
+            repl.run()
     except KeyboardInterrupt:
         sys.exit(0)
 

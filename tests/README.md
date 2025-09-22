@@ -6,12 +6,13 @@ This test suite provides comprehensive coverage for the SL Transit REPL applicat
 
 ```
 tests/
-├── unit/                    # Unit tests (117 tests)
+├── unit/                    # Unit tests (138 tests)
 │   ├── test_cache_management.py      # Cache staleness, metadata, file I/O
 │   ├── test_query_parsing.py         # Command parsing, validation
 │   ├── test_search_functionality.py  # Site search, text normalization
 │   ├── test_file_io_and_errors.py    # File operations, error handling
-│   └── test_terminal_output.py       # Rich terminal display (renamed from 'table')
+│   ├── test_terminal_output.py       # Rich terminal display
+│   └── test_cli_interface.py         # Command line interface, non-interactive mode
 ├── integration/             # Integration tests
 │   └── test_api_integration.py       # API calls, network handling
 ├── fixtures/                # Test data files
@@ -57,7 +58,15 @@ tests/
 - ✅ Missing data graceful handling
 - ✅ Help and completion display
 
-### 6. API Integration (14 tests)
+### 6. Command Line Interface (21 tests)
+- ✅ Single query execution (execute_query method)
+- ✅ Non-interactive mode success/failure handling
+- ✅ Command line argument parsing (main function)
+- ✅ App directory parameter handling
+- ✅ Help message and complex query parsing
+- ✅ Exit code handling (success: 0, failure: 1)
+
+### 7. API Integration (14 tests)
 - ✅ Successful API calls (mocked)
 - ✅ Network error handling
 - ✅ Parameter passing and filtering
@@ -96,7 +105,9 @@ The test suite uses:
 ## Coverage
 
 The test suite provides:
-- **100% coverage** of core functionality
+- **100% coverage** of core functionality including new CLI interface
+- **Complete coverage** of both interactive and non-interactive modes
+- **Argument parsing** and exit code validation
 - **Timezone-aware testing** for datetime operations
 - **Mock-based isolation** from external APIs
 - **Edge case coverage** for error conditions
