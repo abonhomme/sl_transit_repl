@@ -8,5 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+#misc
 cache/sites.json
 /src/sl_transit_repl/cache
+**/.DS_Store

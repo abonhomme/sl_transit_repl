@@ -2,6 +2,9 @@
 
 A command-line tool for querying real time departure data from Stockholm's public transit system (SL) using [Trafiklab](https://www.trafiklab.se/) APIs.
 
+I made this primarily as a compliment to an [xbar](https://xbarapp.com/) plugin I made to keep the next bus time for my closest stops in my menu bar.
+![SL Transit REPL](./docs/images/demo-frejgatan.png)
+
 **Two modes of operation:**
 - **Interactive REPL** with auto-completion and command history
 - **Single-query mode** for scripting and automation
@@ -170,8 +173,8 @@ Enter query: 1002 line:17
 
 Enter query: quit
 ```
-
-TODO: ADD SCREENSHOTS
+![SL Transit REPL](./docs/images/demo-centralen1.png)
+![SL Transit REPL](./docs/images/demo-centralen2.png)
 
 ## Configuration
 ### Time Thresholds
@@ -185,7 +188,7 @@ Uses official data from SL via the [sites and depatures APIs](https://www.trafik
 
 ## Class Usage
 
-The tool is built around the `SLTransitREPL` class _could_ be imported for use in other scripts. Not exactly the intended usage, but knock yourself out.
+The tool is built around the `SLTransitREPL` class and thus _could_ be imported for use in other scripts. Not exactly the intended usage, but knock yourself out.
 
 ```python
 from sl_transit_repl import SLTransitREPL
