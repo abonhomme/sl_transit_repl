@@ -13,7 +13,7 @@ from typing import Any
 import requests
 import unidecode
 from prompt_toolkit import prompt
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.history import FileHistory
 from rich.console import Console
 from rich.table import Table
@@ -561,8 +561,22 @@ class SLTransitREPL:
 
         return True, params
 
-    def _create_completer(self) -> WordCompleter:
+    def _create_completer(self) -> Completer:
         """Create a completer for parameters and values."""
+
+        class PrefixCompleter(Completer):
+            def __init__(self, words, ignore_case=True):
+                self.words = words
+                self.ignore_case = ignore_case
+
+            def get_completions(self, document, complete_event):
+                word = document.get_word_before_cursor(WORD=True)
+                for w in self.words:
+                    if w.startswith(word) or (
+                        self.ignore_case and w.lower().startswith(word.lower())
+                    ):
+                        yield Completion(w, start_position=-len(word))
+
         words = []
 
         # Add special commands
@@ -579,7 +593,8 @@ class SLTransitREPL:
         # Add show_numbers options
         words.extend(["show_numbers:true", "show_numbers:false"])
 
-        return WordCompleter(words, ignore_case=True, pattern=re.compile(r"^|[^\w:]"))
+        # return WordCompleter(words, ignore_case=True, pattern=re.compile(r"^|[^\w:]+$"))
+        return PrefixCompleter(words, ignore_case=True)
 
     def _show_help(self) -> None:
         """Display help information for available commands."""
@@ -762,6 +777,7 @@ class SLTransitREPL:
                     completer=completer,
                     history=history,
                     complete_while_typing=True,
+                    # complete_style=CompleteStyle.READLINE_LIKE,
                 ).strip()
             except EOFError:
                 break
